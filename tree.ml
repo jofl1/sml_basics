@@ -1,29 +1,32 @@
-datatype ('a, 'b) tree = 
-    nil
-    | Node of ('a * 'b) * ('a, 'b) tree * ('a, 'b) tree;
+exception NotFound;
 
- val jofltree = 
- 	Node((1, "a"),
- 		Node((2, "b"), 
- 			Node((3, "c"), nil, nil),
- 			nil),
- 		Node((4, "d"),
- 			nil,
- 			Node((5, "e"), 
- 				Node((6, "f"), nil, nil),
- 				nil)));
+datatype ('a, 'b) tree =
+    Empty
+  | Node of ('a * 'b) * ('a, 'b) tree * ('a, 'b) tree;
 
- fun findkey1 (jofltree, a) = 
- 	case jofltree of
- 		Node((key, value) , left, right) =>
- 			if a = key then value
- 			else (findkey1(left, a)
- 				handle Match => findkey1(right,a));
+val jofltree =
+    Node ((1, "a"),
+        Node ((2, "b"),
+            Node ((3, "c"), Empty, Empty),
+            Empty),
+        Node ((4, "d"),
+            Empty,
+            Node ((5, "e"),
+                Node ((6, "f"), Empty, Empty),
+                Empty)));
 
- fun findkey2 (Node((key, value) , left, right), a) = 
- 		if a = key then value
- 			else (findkey2(left, a)
- 				handle Match => findkey2(right,a))
-  |  findkey2 (nil, a) = 0;
-        
-        
+(* case-style: search left, fall through to right on NotFound *)
+fun findkey1 (t, a) =
+    case t of
+        Empty => raise NotFound
+      | Node ((key, value), left, right) =>
+            if a = key then value
+            else (findkey1 (left, a)
+                  handle NotFound => findkey1 (right, a));
+
+(* clause-style: same behaviour, written with multiple clauses *)
+fun findkey2 (Empty, _) = raise NotFound
+  | findkey2 (Node ((key, value), left, right), a) =
+        if a = key then value
+        else (findkey2 (left, a)
+              handle NotFound => findkey2 (right, a));
